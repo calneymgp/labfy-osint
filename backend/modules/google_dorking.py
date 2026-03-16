@@ -1,7 +1,20 @@
-"""Gera Google Dorks e executa buscas via httpx (fallback scraping)."""
+"""Gera Google Dorks para busca OSINT."""
 
-import httpx
-from urllib.parse import quote_plus
+import re
+
+
+def _format_cpf(cpf: str) -> str:
+    d = re.sub(r"\D", "", cpf)
+    if len(d) == 11:
+        return f"{d[:3]}.{d[3:6]}.{d[6:9]}-{d[9:]}"
+    return cpf
+
+
+def _format_cnpj(cnpj: str) -> str:
+    d = re.sub(r"\D", "", cnpj)
+    if len(d) == 14:
+        return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}"
+    return cnpj
 
 
 def build_dorks(query: str, input_type: str) -> list[dict]:
@@ -58,26 +71,39 @@ def build_dorks(query: str, input_type: str) -> list[dict]:
         ])
 
     elif input_type == "cpf":
+        digits = re.sub(r"\D", "", query)
+        formatted = _format_cpf(digits)
+        # Busca com CPF formatado e raw — ambos aparecem em documentos
         dorks.extend([
             {
-                "source": "Gov.br (PDFs com CPF)",
-                "dork": f'filetype:pdf site:gov.br "{query}"',
-                "description": "Documentos governamentais com este CPF",
+                "source": "Google (CPF geral)",
+                "dork": f'"{formatted}" OR "{digits}"',
+                "description": "Busca geral por este CPF em toda a web",
             },
             {
                 "source": "JusBrasil (CPF)",
-                "dork": f'site:jusbrasil.com.br "{query}"',
+                "dork": f'site:jusbrasil.com.br "{formatted}" OR "{digits}"',
                 "description": "Processos judiciais com este CPF",
             },
             {
+                "source": "Gov.br (PDFs com CPF)",
+                "dork": f'site:gov.br "{formatted}" OR "{digits}"',
+                "description": "Documentos governamentais com este CPF",
+            },
+            {
                 "source": "Diários Oficiais (CPF)",
-                "dork": f'site:diariooficial.com "{query}"',
+                "dork": f'"{formatted}" diário oficial',
                 "description": "Publicações oficiais com este CPF",
             },
             {
+                "source": "Escavador (CPF)",
+                "dork": f'site:escavador.com "{formatted}"',
+                "description": "Dados públicos no Escavador",
+            },
+            {
                 "source": "Licitações (CPF)",
-                "dork": f'site:comprasnet.gov.br "{query}"',
-                "description": "Licitações vinculadas a este CPF",
+                "dork": f'"{formatted}" licitação OR pregão OR contrato',
+                "description": "Licitações e contratos públicos",
             },
         ])
 
@@ -149,37 +175,3 @@ def build_dorks(query: str, input_type: str) -> list[dict]:
         ])
 
     return dorks
-
-
-async def search_google(dork: str, client: httpx.AsyncClient) -> list[dict]:
-    """Busca no Google via scraping básico. Retorna lista de resultados."""
-    url = f"https://www.google.com/search?q={quote_plus(dork)}&num=10&hl=pt-BR"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
-    }
-
-    results = []
-    try:
-        resp = await client.get(url, headers=headers, timeout=15, follow_redirects=True)
-        if resp.status_code == 200:
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(resp.text, "lxml")
-            for g in soup.select("div.g"):
-                link_el = g.select_one("a[href]")
-                title_el = g.select_one("h3")
-                snippet_el = g.select_one("div[data-sncf]") or g.select_one(".VwiC3b")
-                if link_el and title_el:
-                    href = link_el["href"]
-                    if href.startswith("/url?q="):
-                        href = href.split("/url?q=")[1].split("&")[0]
-                    results.append({
-                        "title": title_el.get_text(strip=True),
-                        "url": href,
-                        "snippet": snippet_el.get_text(strip=True) if snippet_el else "",
-                    })
-    except Exception:
-        pass
-
-    return results

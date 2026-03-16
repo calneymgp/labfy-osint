@@ -1,6 +1,7 @@
 """Orquestra todas as buscas e gera relatório Markdown."""
 
 import asyncio
+import re
 import httpx
 from datetime import datetime
 
@@ -42,71 +43,113 @@ async def run_search(query: str, progress_callback=None) -> dict:
         "erros": [],
     }
 
-    async with httpx.AsyncClient() as client:
-        tasks = []
+    # Helper to send structured step updates
+    async def step(step_id_or_dict, label: str = "", status: str = "done", count: int = 0):
+        if not progress_callback:
+            return
+        try:
+            if isinstance(step_id_or_dict, dict):
+                await progress_callback(step_id_or_dict)
+            else:
+                await progress_callback({
+                    "step_id": step_id_or_dict,
+                    "label": label,
+                    "status": status,
+                    "count": count,
+                })
+        except Exception:
+            pass
 
-        # Validação específica por tipo
+    async with httpx.AsyncClient() as client:
+
+        # --- Validação ---
         if input_type == "cpf":
-            result["validacao"] = {"valido": validate_cpf(query)}
-            tasks.append(_wrap("cpf_data", search_cpf_receita(query.replace(".", "").replace("-", ""), client), result))
+            is_valid = validate_cpf(query)
+            result["validacao"] = {"valido": is_valid}
+            await step("validacao", f"Validação CPF — {'válido' if is_valid else 'inválido'}", "done")
+        elif input_type == "cnpj":
+            is_valid = validate_cnpj(query)
+            result["validacao"] = {"valido": is_valid}
+            await step("validacao", f"Validação CNPJ — {'válido' if is_valid else 'inválido'}", "done")
+
+        # --- APIs diretas (paralelas, com step tracking) ---
+        api_tasks = []
+
+        if input_type == "cpf":
+            api_tasks.append(_tracked("cpf_data", "BrasilAPI — CPF",
+                search_cpf_receita(query.replace(".", "").replace("-", ""), client), result, step))
 
         elif input_type == "cnpj":
-            result["validacao"] = {"valido": validate_cnpj(query)}
-            tasks.append(_wrap("cnpj_data", lookup_cnpj(query, client), result))
+            api_tasks.append(_tracked("cnpj_data", "BrasilAPI — CNPJ",
+                lookup_cnpj(query, client), result, step))
 
         elif input_type == "email":
             domain = extract_domain_from_email(query)
             if domain:
-                tasks.append(_wrap("whois_data", whois_domain(domain, client), result))
+                api_tasks.append(_tracked("whois_data", f"WHOIS — {domain}",
+                    whois_domain(domain, client), result, step))
 
-        # Busca por nome: procurar CNPJs associados
         if input_type == "nome":
-            tasks.append(_wrap_list("cnpjs_associados", search_cnpj_by_name(query, client), result))
-            tasks.append(_wrap_list("servidores", search_ceaf(query, client), result))
-            tasks.append(_wrap_list("ceis", search_ceis(query, client), result))
+            api_tasks.append(_tracked_list("cnpjs_associados", "Casa dos Dados — CNPJs",
+                search_cnpj_by_name(query, client), result, step))
+            api_tasks.append(_tracked_list("servidores", "Portal da Transparência — Servidores",
+                search_ceaf(query, client), result, step))
+            api_tasks.append(_tracked_list("ceis", "CEIS — Sanções",
+                search_ceis(query, client), result, step))
 
-        # Buscas universais (todos os tipos)
-        tasks.append(_wrap_list("diarios", search_diarios(query, client), result))
-        tasks.append(_wrap_list("jusbrasil", search_jusbrasil(query, client), result))
-        tasks.append(_wrap_list("escavador", search_escavador(query, client), result))
+        # Universais
+        api_tasks.append(_tracked_list("diarios", "Querido Diário — Diários Oficiais",
+            search_diarios(query, client), result, step))
+        api_tasks.append(_tracked_list("jusbrasil", "JusBrasil — Processos",
+            search_jusbrasil(query, client), result, step))
+        api_tasks.append(_tracked_list("escavador", "Escavador — Dados Públicos",
+            search_escavador(query, client), result, step))
 
-        # Google Dorks
+        await asyncio.gather(*api_tasks)
+
+        # --- Dorks via SearXNG ---
         dorks = build_dorks(query, input_type)
         result["google_dorks"] = dorks
 
-        if progress_callback:
-            await progress_callback(f"Executando {len(tasks)} buscas em APIs...")
-
-        # Executa APIs diretas primeiro
-        await asyncio.gather(*tasks)
-
-        if progress_callback:
-            await progress_callback(f"Executando {len(dorks)} dorks via DuckDuckGo...")
-
-        # Executa todos os dorks via DuckDuckGo (sequencial com rate limit)
-        dork_results = await search_dorks(dorks, progress_callback=progress_callback)
+        dork_results = await search_dorks(dorks, progress_callback=step)
         result["google_results"] = dork_results
 
     result["markdown"] = generate_markdown(result)
+
+    # Final step
+    await step("complete", "Varredura concluída", "done")
+
     return result
 
 
-async def _wrap(key, coro, result):
+async def _tracked(key, label, coro, result, step):
+    """Executa coroutine com tracking de step."""
+    await step(key, label, "running")
     try:
         val = await coro
         result[key] = val
+        if val:
+            await step(key, label, "done", count=1)
+        else:
+            await step(key, label, "empty")
     except Exception as e:
         result["erros"].append(f"{key}: {str(e)}")
+        await step(key, label, "error")
 
 
-async def _wrap_list(key, coro, result):
+async def _tracked_list(key, label, coro, result, step):
+    """Executa coroutine de lista com tracking de step."""
+    await step(key, label, "running")
     try:
         val = await coro
         if val:
             result[key] = val
+            await step(key, label, "done", count=len(val))
+        else:
+            await step(key, label, "empty")
     except Exception as e:
         result["erros"].append(f"{key}: {str(e)}")
-
+        await step(key, label, "error")
 
 
 def generate_markdown(data: dict) -> str:

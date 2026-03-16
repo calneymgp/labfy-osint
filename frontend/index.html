@@ -9,22 +9,29 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg: #0a0a0f;
-            --surface: #12121a;
-            --surface2: #1a1a2e;
-            --border: #2a2a3e;
+            --bg: #06060b;
+            --surface: #0d0d14;
+            --surface2: #14141f;
+            --surface3: #1c1c2b;
+            --border: #252538;
             --accent: #00d4aa;
+            --accent-dim: #00d4aa33;
             --accent2: #00b894;
-            --text: #e0e0e0;
-            --text-dim: #888;
-            --danger: #ff6b6b;
+            --green: #22c55e;
+            --green-dim: #22c55e22;
+            --yellow: #eab308;
+            --red: #ef4444;
+            --text: #e2e2e8;
+            --text-dim: #6b6b80;
+            --text-muted: #44445a;
         }
 
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
@@ -33,34 +40,35 @@
             padding: 2rem 1.5rem;
         }
 
-        /* Header */
+        /* ══════ Header ══════ */
         .header {
             text-align: center;
             margin-bottom: 2.5rem;
         }
 
         .logo {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
             color: var(--accent);
             text-transform: uppercase;
         }
 
-        .logo span { color: var(--text-dim); font-weight: 400; }
+        .logo span { color: var(--text-dim); font-weight: 300; }
 
         .subtitle {
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            margin-top: 0.3rem;
-            letter-spacing: 2px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-top: 0.4rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
         }
 
-        /* Search */
+        /* ══════ Search Box ══════ */
         .search-box {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
@@ -74,72 +82,73 @@
             flex: 1;
             background: var(--surface2);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            padding: 0.85rem 1.2rem;
             color: var(--text);
             font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .search-input:focus {
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
-        .search-input::placeholder {
-            color: var(--text-dim);
-        }
+        .search-input::placeholder { color: var(--text-muted); }
 
         .btn {
             background: var(--accent);
             color: #000;
             border: none;
-            border-radius: 8px;
-            padding: 0.9rem 2rem;
+            border-radius: 10px;
+            padding: 0.85rem 2rem;
             font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             text-transform: uppercase;
         }
 
-        .btn:hover { background: var(--accent2); }
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-        .type-badge {
-            display: inline-block;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.3rem 0.8rem;
-            font-size: 0.75rem;
-            color: var(--accent);
-            margin-top: 0.75rem;
-            transition: all 0.3s;
-        }
-
-        .examples {
-            margin-top: 0.75rem;
+        .meta-row {
             display: flex;
-            gap: 0.5rem;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
             flex-wrap: wrap;
         }
 
+        .type-badge {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 0.25rem 0.7rem;
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .type-badge.visible { display: inline-block; }
+
         .example-chip {
-            background: var(--surface2);
+            background: transparent;
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 0.25rem 0.6rem;
-            font-size: 0.7rem;
-            color: var(--text-dim);
+            padding: 0.2rem 0.55rem;
+            font-size: 0.65rem;
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s;
+            font-family: inherit;
         }
 
         .example-chip:hover {
@@ -147,62 +156,204 @@
             color: var(--accent);
         }
 
-        /* Progress */
-        .progress-area {
+        /* ══════ Step Timeline ══════ */
+        .timeline-area {
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-area.active { display: block; }
+
+        .timeline {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            max-height: 420px;
+            overflow: hidden;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%);
+        }
+
+        /* Step Item */
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.6rem 1rem;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            display: none;
+            margin-bottom: 0.4rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            animation: stepSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        .progress-area.active { display: block; }
-
-        .progress-bar {
-            height: 3px;
-            background: var(--surface2);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 0.75rem;
+        .step-item.exiting {
+            animation: stepFadeOut 0.5s ease forwards;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--accent2));
-            width: 0%;
-            transition: width 0.3s;
-            animation: pulse 1.5s ease-in-out infinite;
+        @keyframes stepSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        @keyframes stepFadeOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+                max-height: 0;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                overflow: hidden;
+            }
         }
 
-        .progress-log {
+        /* Step Icon */
+        .step-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* Spinner */
+        .step-icon.running {
+            background: var(--accent-dim);
+        }
+
+        .step-icon.running::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--accent-dim);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Checkmark */
+        .step-icon.done {
+            background: var(--green-dim);
+        }
+
+        .step-icon.done svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--green);
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .step-icon.done svg .check-path {
+            stroke-dasharray: 24;
+            stroke-dashoffset: 24;
+            animation: drawCheck 0.4s 0.1s ease forwards;
+        }
+
+        @keyframes drawCheck {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Empty (dash) */
+        .step-icon.empty {
+            background: var(--surface3);
+        }
+
+        .step-icon.empty::after {
+            content: '—';
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        /* Error */
+        .step-icon.error {
+            background: #ef444422;
+        }
+
+        .step-icon.error::after {
+            content: '✕';
+            color: var(--red);
             font-size: 0.75rem;
-            color: var(--text-dim);
-            max-height: 120px;
-            overflow-y: auto;
+            font-weight: 700;
         }
 
-        .progress-log div {
-            padding: 0.15rem 0;
-            border-bottom: 1px solid var(--border);
+        /* Step Content */
+        .step-label {
+            flex: 1;
+            font-size: 0.78rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .progress-log div::before {
-            content: "▸ ";
+        .step-item[data-status="empty"] .step-label {
+            color: var(--text-muted);
+        }
+
+        .step-item[data-status="running"] .step-label {
             color: var(--accent);
         }
 
-        /* Results */
+        .step-count {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            padding: 0.15rem 0.5rem;
+            background: var(--surface2);
+            border-radius: 6px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-count.has-results {
+            color: var(--green);
+            background: var(--green-dim);
+        }
+
+        .step-time {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* ══════ Results ══════ */
         .results-area {
             display: none;
+            animation: fadeInUp 0.5s ease;
         }
 
         .results-area.active { display: block; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         .results-header {
             display: flex;
@@ -212,17 +363,19 @@
         }
 
         .results-stats {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-dim);
         }
+
+        .btn-group { display: flex; gap: 0.4rem; }
 
         .btn-sm {
             background: var(--surface2);
             border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.4rem 1rem;
-            font-size: 0.75rem;
-            border-radius: 6px;
+            color: var(--text-dim);
+            padding: 0.35rem 0.8rem;
+            font-size: 0.7rem;
+            border-radius: 8px;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.2s;
@@ -230,30 +383,28 @@
 
         .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
 
+        /* Markdown */
         .markdown-body {
             background: var(--surface) !important;
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 2rem;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            color: var(--text) !important;
         }
 
-        .markdown-body h1 { border-bottom-color: var(--border); }
-        .markdown-body h2 { border-bottom-color: var(--border); }
+        .markdown-body h1 { border-bottom-color: var(--border); color: var(--accent); }
+        .markdown-body h2 { border-bottom-color: var(--border); color: var(--text); }
+        .markdown-body h3 { color: var(--text-dim); }
 
-        .markdown-body table {
-            display: table;
-            width: 100%;
-        }
-
+        .markdown-body table { display: table; width: 100%; }
         .markdown-body table th,
         .markdown-body table td {
             border-color: var(--border);
-            padding: 0.5rem 0.75rem;
+            padding: 0.45rem 0.7rem;
         }
 
         .markdown-body a { color: var(--accent); }
-
         .markdown-body blockquote {
             border-left-color: var(--accent);
             color: var(--text-dim);
@@ -270,15 +421,17 @@
             margin-top: 3rem;
             padding-top: 1.5rem;
             border-top: 1px solid var(--border);
-            color: var(--text-dim);
-            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-size: 0.6rem;
+            letter-spacing: 1px;
         }
 
         /* Responsive */
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
             .search-row { flex-direction: column; }
             .container { padding: 1rem; }
             .markdown-body { padding: 1rem; }
+            .step-label { font-size: 0.7rem; }
         }
     </style>
 </head>
@@ -301,8 +454,8 @@
                 >
                 <button class="btn" id="searchBtn" onclick="startSearch()">BUSCAR</button>
             </div>
-            <div id="typeBadge" class="type-badge" style="display:none"></div>
-            <div class="examples">
+            <div class="meta-row">
+                <span class="type-badge" id="typeBadge"></span>
                 <span class="example-chip" onclick="fillExample('João da Silva')">Nome</span>
                 <span class="example-chip" onclick="fillExample('123.456.789-00')">CPF</span>
                 <span class="example-chip" onclick="fillExample('12.345.678/0001-00')">CNPJ</span>
@@ -311,17 +464,16 @@
             </div>
         </div>
 
-        <div class="progress-area" id="progressArea">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="progress-log" id="progressLog"></div>
+        <!-- Animated Step Timeline -->
+        <div class="timeline-area" id="timelineArea">
+            <div class="timeline" id="timeline"></div>
         </div>
 
+        <!-- Results -->
         <div class="results-area" id="resultsArea">
             <div class="results-header">
                 <div class="results-stats" id="resultsStats"></div>
-                <div>
+                <div class="btn-group">
                     <button class="btn-sm" onclick="copyMarkdown()">Copiar MD</button>
                     <button class="btn-sm" onclick="downloadMarkdown()">Download</button>
                 </div>
@@ -330,78 +482,138 @@
         </div>
 
         <div class="footer">
-            Labfy OSINT — Apenas fontes públicas. Use com responsabilidade.
+            LABFY OSINT &mdash; Apenas fontes públicas. Use com responsabilidade.
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        const input = document.getElementById('searchInput');
-        const btn = document.getElementById('searchBtn');
-        const badge = document.getElementById('typeBadge');
-        const progressArea = document.getElementById('progressArea');
-        const progressFill = document.getElementById('progressFill');
-        const progressLog = document.getElementById('progressLog');
-        const resultsArea = document.getElementById('resultsArea');
-        const resultsStats = document.getElementById('resultsStats');
-        const markdownOutput = document.getElementById('markdownOutput');
+    (() => {
+        const $ = id => document.getElementById(id);
+        const input = $('searchInput');
+        const btn = $('searchBtn');
+        const badge = $('typeBadge');
+        const timelineArea = $('timelineArea');
+        const timeline = $('timeline');
+        const resultsArea = $('resultsArea');
+        const resultsStats = $('resultsStats');
+        const mdOutput = $('markdownOutput');
 
         let rawMarkdown = '';
         let detectTimeout = null;
+        let searchStartTime = 0;
+        let stepElements = {};  // step_id -> DOM element
+        const MAX_VISIBLE_STEPS = 12;
 
-        // Detecta tipo enquanto digita
+        // ─── Type detection ───
         input.addEventListener('input', () => {
             clearTimeout(detectTimeout);
             const q = input.value.trim();
-            if (q.length < 3) {
-                badge.style.display = 'none';
-                return;
-            }
+            if (q.length < 3) { badge.classList.remove('visible'); return; }
             detectTimeout = setTimeout(async () => {
                 try {
-                    const resp = await fetch(`/api/detect?q=${encodeURIComponent(q)}`);
-                    const data = await resp.json();
-                    const labels = {
-                        nome: 'Nome / Pessoa',
-                        cpf: 'CPF',
-                        cnpj: 'CNPJ',
-                        email: 'Email',
-                        telefone: 'Telefone',
-                    };
-                    badge.textContent = `Tipo: ${labels[data.tipo] || data.tipo}`;
-                    badge.style.display = 'inline-block';
+                    const r = await fetch(`/api/detect?q=${encodeURIComponent(q)}`);
+                    const d = await r.json();
+                    const labels = { nome:'NOME', cpf:'CPF', cnpj:'CNPJ', email:'EMAIL', telefone:'TELEFONE' };
+                    badge.textContent = labels[d.tipo] || d.tipo;
+                    badge.classList.add('visible');
                 } catch {}
             }, 300);
         });
 
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') startSearch();
-        });
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') startSearch(); });
 
-        function fillExample(text) {
+        window.fillExample = text => {
             input.value = text;
             input.dispatchEvent(new Event('input'));
             input.focus();
+        };
+
+        // ─── SVG templates ───
+        const checkSVG = `<svg viewBox="0 0 24 24"><path class="check-path" d="M5 13l4 4L19 7"/></svg>`;
+
+        // ─── Step management ───
+        function createStepEl(stepId, label, status, count = 0) {
+            const el = document.createElement('div');
+            el.className = 'step-item';
+            el.dataset.stepId = stepId;
+            el.dataset.status = status;
+
+            const elapsed = ((Date.now() - searchStartTime) / 1000).toFixed(1);
+
+            el.innerHTML = `
+                <div class="step-icon ${status}">${status === 'done' ? checkSVG : ''}</div>
+                <div class="step-label">${label}</div>
+                ${count > 0 ? `<span class="step-count has-results">${count} resultado${count > 1 ? 's' : ''}</span>` : ''}
+                ${status === 'empty' ? `<span class="step-count">0</span>` : ''}
+                <span class="step-time">${elapsed}s</span>
+            `;
+
+            return el;
         }
 
-        function addLog(msg) {
-            const div = document.createElement('div');
-            div.textContent = msg;
-            progressLog.appendChild(div);
-            progressLog.scrollTop = progressLog.scrollHeight;
+        function addOrUpdateStep(data) {
+            const { step_id, label, status, count } = data;
+
+            // Update existing step
+            if (stepElements[step_id]) {
+                const existing = stepElements[step_id];
+                const newEl = createStepEl(step_id, label, status, count || 0);
+                // Copy animation state (already visible)
+                newEl.style.animation = 'none';
+                newEl.style.opacity = '1';
+                newEl.style.transform = 'translateY(0) scale(1)';
+                existing.replaceWith(newEl);
+                stepElements[step_id] = newEl;
+                return;
+            }
+
+            // Create new step — insert at bottom
+            const el = createStepEl(step_id, label, status, count || 0);
+            timeline.appendChild(el);
+            stepElements[step_id] = el;
+
+            // Remove oldest if too many
+            trimTimeline();
+
+            // Scroll to bottom
+            timeline.scrollTop = timeline.scrollHeight;
         }
 
-        async function startSearch() {
+        function trimTimeline() {
+            const items = timeline.querySelectorAll('.step-item:not(.exiting)');
+            if (items.length > MAX_VISIBLE_STEPS) {
+                const toRemove = items.length - MAX_VISIBLE_STEPS;
+                for (let i = 0; i < toRemove; i++) {
+                    const item = items[i];
+                    item.classList.add('exiting');
+                    // Clean up after animation
+                    setTimeout(() => {
+                        if (item.parentNode) {
+                            item.parentNode.removeChild(item);
+                            delete stepElements[item.dataset.stepId];
+                        }
+                    }, 500);
+                }
+            }
+        }
+
+        function resetTimeline() {
+            timeline.innerHTML = '';
+            stepElements = {};
+            timelineArea.classList.add('active');
+            resultsArea.classList.remove('active');
+        }
+
+        // ─── Search ───
+        window.startSearch = async function() {
             const query = input.value.trim();
             if (query.length < 3) return;
 
             btn.disabled = true;
             btn.textContent = 'BUSCANDO...';
-            progressArea.classList.add('active');
-            resultsArea.classList.remove('active');
-            progressLog.innerHTML = '';
-            progressFill.style.width = '10%';
-            addLog('Conectando...');
+            searchStartTime = Date.now();
+            resetTimeline();
 
             const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
             let ws;
@@ -409,43 +621,59 @@
             try {
                 ws = new WebSocket(`${protocol}://${location.host}/ws/search`);
             } catch {
-                // Fallback para HTTP
                 await fallbackSearch(query);
                 return;
             }
 
-            let progress = 10;
-
             ws.onopen = () => {
                 ws.send(JSON.stringify({ query }));
-                addLog('Varredura iniciada...');
+                addOrUpdateStep({
+                    step_id: 'start',
+                    label: 'Iniciando varredura...',
+                    status: 'running',
+                    count: 0,
+                });
             };
 
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
 
-                if (data.type === 'info') {
-                    addLog(data.message);
-                    progress = Math.min(progress + 10, 40);
-                    progressFill.style.width = progress + '%';
-                }
-                else if (data.type === 'progress') {
-                    addLog(data.message);
-                    progress = Math.min(progress + 15, 85);
-                    progressFill.style.width = progress + '%';
+                if (data.type === 'step') {
+                    addOrUpdateStep(data);
+
+                    // Mark "start" as done once we get first real step
+                    if (data.step_id !== 'start' && data.step_id !== 'detect' && stepElements['start']) {
+                        const startEl = stepElements['start'];
+                        if (startEl.dataset.status === 'running') {
+                            addOrUpdateStep({
+                                step_id: 'start',
+                                label: 'Varredura em andamento',
+                                status: 'done',
+                                count: 0,
+                            });
+                        }
+                    }
                 }
                 else if (data.type === 'result') {
-                    progressFill.style.width = '100%';
-                    addLog('Varredura concluída!');
                     showResults(data.markdown, data.stats);
                 }
                 else if (data.type === 'error') {
-                    addLog(`ERRO: ${data.message}`);
+                    addOrUpdateStep({
+                        step_id: 'error',
+                        label: data.message,
+                        status: 'error',
+                        count: 0,
+                    });
                 }
             };
 
             ws.onerror = () => {
-                addLog('WebSocket falhou, usando HTTP...');
+                addOrUpdateStep({
+                    step_id: 'ws_error',
+                    label: 'WebSocket falhou, tentando HTTP...',
+                    status: 'error',
+                    count: 0,
+                });
                 fallbackSearch(query);
             };
 
@@ -453,11 +681,15 @@
                 btn.disabled = false;
                 btn.textContent = 'BUSCAR';
             };
-        }
+        };
 
         async function fallbackSearch(query) {
-            addLog('Buscando via HTTP...');
-            progressFill.style.width = '50%';
+            addOrUpdateStep({
+                step_id: 'http',
+                label: 'Buscando via HTTP...',
+                status: 'running',
+                count: 0,
+            });
 
             try {
                 const resp = await fetch('/api/search', {
@@ -468,14 +700,13 @@
                 const data = await resp.json();
 
                 if (data.error) {
-                    addLog(`ERRO: ${data.error}`);
+                    addOrUpdateStep({ step_id: 'http', label: data.error, status: 'error', count: 0 });
                 } else {
-                    progressFill.style.width = '100%';
-                    addLog('Concluído!');
+                    addOrUpdateStep({ step_id: 'http', label: 'Busca HTTP concluída', status: 'done', count: 0 });
                     showResults(data.markdown, data.stats);
                 }
             } catch (err) {
-                addLog(`Erro: ${err.message}`);
+                addOrUpdateStep({ step_id: 'http_err', label: err.message, status: 'error', count: 0 });
             }
 
             btn.disabled = false;
@@ -484,25 +715,37 @@
 
         function showResults(md, stats) {
             rawMarkdown = md;
-            markdownOutput.innerHTML = marked.parse(md);
-            resultsStats.textContent = `${stats.fontes} fontes consultadas` +
-                (stats.erros > 0 ? ` · ${stats.erros} erros` : '');
+            mdOutput.innerHTML = marked.parse(md);
+            resultsStats.textContent = `${stats.fontes} fontes · ${stats.erros || 0} erros · ${((Date.now() - searchStartTime) / 1000).toFixed(1)}s`;
             resultsArea.classList.add('active');
 
+            // Fade out timeline after a beat
             setTimeout(() => {
-                progressArea.classList.remove('active');
-            }, 1000);
+                timelineArea.style.transition = 'opacity 0.6s, max-height 0.6s';
+                timelineArea.style.opacity = '0.3';
+                timelineArea.style.maxHeight = '120px';
+            }, 1500);
+
+            // Expand timeline on hover
+            timelineArea.onmouseenter = () => {
+                timelineArea.style.opacity = '1';
+                timelineArea.style.maxHeight = '420px';
+            };
+            timelineArea.onmouseleave = () => {
+                timelineArea.style.opacity = '0.3';
+                timelineArea.style.maxHeight = '120px';
+            };
         }
 
-        function copyMarkdown() {
+        window.copyMarkdown = () => {
             navigator.clipboard.writeText(rawMarkdown).then(() => {
-                const btn = event.target;
-                btn.textContent = 'Copiado!';
-                setTimeout(() => btn.textContent = 'Copiar MD', 1500);
+                const b = event.target;
+                b.textContent = 'Copiado!';
+                setTimeout(() => b.textContent = 'Copiar MD', 1500);
             });
-        }
+        };
 
-        function downloadMarkdown() {
+        window.downloadMarkdown = () => {
             const blob = new Blob([rawMarkdown], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -510,7 +753,8 @@
             a.download = `osint-${input.value.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0,10)}.md`;
             a.click();
             URL.revokeObjectURL(url);
-        }
+        };
+    })();
     </script>
 </body>
 </html>

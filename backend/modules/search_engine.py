@@ -12,7 +12,7 @@ SEARXNG_URL = os.getenv("SEARXNG_URL", "http://searxng:8080")
 
 
 async def _searxng_search(query: str, max_results: int = 8, engines: str = "") -> list[dict]:
-    """Busca via SearXNG local (meta-search: Google + Bing + DDG + Brave + Qwant)."""
+    """Busca via SearXNG local (meta-search)."""
     results = []
     try:
         params = {
@@ -36,7 +36,6 @@ async def _searxng_search(query: str, max_results: int = 8, engines: str = "") -
                 for r in data.get("results", []):
                     url = r.get("url", "")
                     title = r.get("title", "")
-                    # Filtra resultados sem URL real ou com gibberish
                     if not url or not title or len(title) < 5:
                         continue
                     if url in seen_urls:
@@ -72,7 +71,6 @@ def _ddg_search(query: str, max_results: int = 8) -> list[dict]:
 
 async def search_web(query: str, max_results: int = 8) -> list[dict]:
     """Busca com fallback: SearXNG (google,bing) → SearXNG (all) → DDG."""
-    # Para dorks com site:/filetype:, usar engines que suportam
     has_operators = any(op in query for op in ["site:", "filetype:", "inurl:", "intitle:"])
     if has_operators:
         results = await _searxng_search(query, max_results, engines="google,bing,brave")
@@ -86,19 +84,37 @@ async def search_web(query: str, max_results: int = 8) -> list[dict]:
 
 
 async def search_dorks(dorks: list[dict], progress_callback=None) -> list[dict]:
-    """Executa dorks via SearXNG (sem rate limit) com delay mínimo."""
+    """Executa dorks via SearXNG com step tracking."""
     results = []
 
     for i, dork_info in enumerate(dorks):
+        step_id = f"dork_{i}"
+        source = dork_info["source"]
+
         if progress_callback:
             try:
-                await progress_callback(
-                    f"[{i+1}/{len(dorks)}] Buscando: {dork_info['source']}..."
-                )
+                await progress_callback({
+                    "step_id": step_id,
+                    "label": f"SearXNG — {source}",
+                    "status": "running",
+                    "count": 0,
+                })
             except Exception:
                 pass
 
         items = await search_web(dork_info["dork"], max_results=5)
+
+        if progress_callback:
+            try:
+                await progress_callback({
+                    "step_id": step_id,
+                    "label": f"SearXNG — {source}",
+                    "status": "done" if items else "empty",
+                    "count": len(items),
+                })
+            except Exception:
+                pass
+
         if items:
             results.append({
                 "source": dork_info["source"],
@@ -107,7 +123,7 @@ async def search_dorks(dorks: list[dict], progress_callback=None) -> list[dict]:
                 "results": items,
             })
 
-        # Delay mínimo entre buscas (SearXNG local não tem rate limit agressivo)
+        # Delay entre buscas
         if i < len(dorks) - 1:
             await asyncio.sleep(1)
 

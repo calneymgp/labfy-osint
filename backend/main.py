@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from modules.aggregator import run_search
 from modules.detector import detect_input_type
 
-app = FastAPI(title="Labfy OSINT", version="0.1.0")
+app = FastAPI(title="Labfy OSINT", version="0.2.0")
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
@@ -57,7 +57,7 @@ async def detect(q: str):
 
 @app.websocket("/ws/search")
 async def ws_search(websocket: WebSocket):
-    """Busca via WebSocket com progresso em tempo real."""
+    """Busca via WebSocket com step tracking em tempo real."""
     await websocket.accept()
     try:
         data = await websocket.receive_text()
@@ -70,16 +70,27 @@ async def ws_search(websocket: WebSocket):
             return
 
         tipo = detect_input_type(query)
-        await websocket.send_json({"type": "info", "message": f"Tipo detectado: {tipo}"})
-        await websocket.send_json({"type": "progress", "message": "Iniciando varredura..."})
+        tipo_labels = {"nome": "Nome", "cpf": "CPF", "cnpj": "CNPJ", "email": "Email", "telefone": "Telefone"}
+        await websocket.send_json({
+            "type": "step",
+            "step_id": "detect",
+            "label": f"Tipo detectado: {tipo_labels.get(tipo, tipo)}",
+            "status": "done",
+            "count": 0,
+        })
 
-        async def send_progress(msg):
+        async def send_step(step_data):
+            """Envia step update estruturado."""
             try:
-                await websocket.send_json({"type": "progress", "message": msg})
+                if isinstance(step_data, dict):
+                    await websocket.send_json({"type": "step", **step_data})
+                else:
+                    # Fallback para string (compatibilidade)
+                    await websocket.send_json({"type": "step", "step_id": "info", "label": str(step_data), "status": "done"})
             except Exception:
                 pass
 
-        result = await run_search(query, progress_callback=send_progress)
+        result = await run_search(query, progress_callback=send_step)
 
         await websocket.send_json({
             "type": "result",
