@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labfy OSINT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a2e;
+            --border: #2a2a3e;
+            --accent: #00d4aa;
+            --accent2: #00b894;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --danger: #ff6b6b;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .logo span { color: var(--text-dim); font-weight: 400; }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            letter-spacing: 2px;
+        }
+
+        /* Search */
+        .search-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .search-input {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1.2rem;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 0.9rem 2rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .btn:hover { background: var(--accent2); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .type-badge {
+            display: inline-block;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-top: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .examples {
+            margin-top: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .example-chip {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Progress */
+        .progress-area {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .progress-area.active { display: block; }
+
+        .progress-bar {
+            height: 3px;
+            background: var(--surface2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            width: 0%;
+            transition: width 0.3s;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .progress-log {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .progress-log div {
+            padding: 0.15rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-log div::before {
+            content: "▸ ";
+            color: var(--accent);
+        }
+
+        /* Results */
+        .results-area {
+            display: none;
+        }
+
+        .results-area.active { display: block; }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .results-stats {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .btn-sm {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 1rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+        .markdown-body {
+            background: var(--surface) !important;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            font-size: 0.85rem;
+        }
+
+        .markdown-body h1 { border-bottom-color: var(--border); }
+        .markdown-body h2 { border-bottom-color: var(--border); }
+
+        .markdown-body table {
+            display: table;
+            width: 100%;
+        }
+
+        .markdown-body table th,
+        .markdown-body table td {
+            border-color: var(--border);
+            padding: 0.5rem 0.75rem;
+        }
+
+        .markdown-body a { color: var(--accent); }
+
+        .markdown-body blockquote {
+            border-left-color: var(--accent);
+            color: var(--text-dim);
+        }
+
+        .markdown-body code {
+            background: var(--surface2);
+            color: var(--accent);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 0.7rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .search-row { flex-direction: column; }
+            .container { padding: 1rem; }
+            .markdown-body { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">LABFY <span>OSINT</span></div>
+            <div class="subtitle">Open Source Intelligence Toolkit</div>
+        </div>
+
+        <div class="search-box">
+            <div class="search-row">
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchInput"
+                    placeholder="Nome, CPF, CNPJ, email ou telefone..."
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button class="btn" id="searchBtn" onclick="startSearch()">BUSCAR</button>
+            </div>
+            <div id="typeBadge" class="type-badge" style="display:none"></div>
+            <div class="examples">
+                <span class="example-chip" onclick="fillExample('João da Silva')">Nome</span>
+                <span class="example-chip" onclick="fillExample('123.456.789-00')">CPF</span>
+                <span class="example-chip" onclick="fillExample('12.345.678/0001-00')">CNPJ</span>
+                <span class="example-chip" onclick="fillExample('joao@empresa.com')">Email</span>
+                <span class="example-chip" onclick="fillExample('(11) 99999-8888')">Telefone</span>
+            </div>
+        </div>
+
+        <div class="progress-area" id="progressArea">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-log" id="progressLog"></div>
+        </div>
+
+        <div class="results-area" id="resultsArea">
+            <div class="results-header">
+                <div class="results-stats" id="resultsStats"></div>
+                <div>
+                    <button class="btn-sm" onclick="copyMarkdown()">Copiar MD</button>
+                    <button class="btn-sm" onclick="downloadMarkdown()">Download</button>
+                </div>
+            </div>
+            <div class="markdown-body" id="markdownOutput"></div>
+        </div>
+
+        <div class="footer">
+            Labfy OSINT — Apenas fontes públicas. Use com responsabilidade.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const input = document.getElementById('searchInput');
+        const btn = document.getElementById('searchBtn');
+        const badge = document.getElementById('typeBadge');
+        const progressArea = document.getElementById('progressArea');
+        const progressFill = document.getElementById('progressFill');
+        const progressLog = document.getElementById('progressLog');
+        const resultsArea = document.getElementById('resultsArea');
+        const resultsStats = document.getElementById('resultsStats');
+        const markdownOutput = document.getElementById('markdownOutput');
+
+        let rawMarkdown = '';
+        let detectTimeout = null;
+
+        // Detecta tipo enquanto digita
+        input.addEventListener('input', () => {
+            clearTimeout(detectTimeout);
+            const q = input.value.trim();
+            if (q.length < 3) {
+                badge.style.display = 'none';
+                return;
+            }
+            detectTimeout = setTimeout(async () => {
+                try {
+                    const resp = await fetch(`/api/detect?q=${encodeURIComponent(q)}`);
+                    const data = await resp.json();
+                    const labels = {
+                        nome: 'Nome / Pessoa',
+                        cpf: 'CPF',
+                        cnpj: 'CNPJ',
+                        email: 'Email',
+                        telefone: 'Telefone',
+                    };
+                    badge.textContent = `Tipo: ${labels[data.tipo] || data.tipo}`;
+                    badge.style.display = 'inline-block';
+                } catch {}
+            }, 300);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') startSearch();
+        });
+
+        function fillExample(text) {
+            input.value = text;
+            input.dispatchEvent(new Event('input'));
+            input.focus();
+        }
+
+        function addLog(msg) {
+            const div = document.createElement('div');
+            div.textContent = msg;
+            progressLog.appendChild(div);
+            progressLog.scrollTop = progressLog.scrollHeight;
+        }
+
+        async function startSearch() {
+            const query = input.value.trim();
+            if (query.length < 3) return;
+
+            btn.disabled = true;
+            btn.textContent = 'BUSCANDO...';
+            progressArea.classList.add('active');
+            resultsArea.classList.remove('active');
+            progressLog.innerHTML = '';
+            progressFill.style.width = '10%';
+            addLog('Conectando...');
+
+            const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+            let ws;
+
+            try {
+                ws = new WebSocket(`${protocol}://${location.host}/ws/search`);
+            } catch {
+                // Fallback para HTTP
+                await fallbackSearch(query);
+                return;
+            }
+
+            let progress = 10;
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ query }));
+                addLog('Varredura iniciada...');
+            };
+
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+
+                if (data.type === 'info') {
+                    addLog(data.message);
+                    progress = Math.min(progress + 10, 40);
+                    progressFill.style.width = progress + '%';
+                }
+                else if (data.type === 'progress') {
+                    addLog(data.message);
+                    progress = Math.min(progress + 15, 85);
+                    progressFill.style.width = progress + '%';
+                }
+                else if (data.type === 'result') {
+                    progressFill.style.width = '100%';
+                    addLog('Varredura concluída!');
+                    showResults(data.markdown, data.stats);
+                }
+                else if (data.type === 'error') {
+                    addLog(`ERRO: ${data.message}`);
+                }
+            };
+
+            ws.onerror = () => {
+                addLog('WebSocket falhou, usando HTTP...');
+                fallbackSearch(query);
+            };
+
+            ws.onclose = () => {
+                btn.disabled = false;
+                btn.textContent = 'BUSCAR';
+            };
+        }
+
+        async function fallbackSearch(query) {
+            addLog('Buscando via HTTP...');
+            progressFill.style.width = '50%';
+
+            try {
+                const resp = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+                const data = await resp.json();
+
+                if (data.error) {
+                    addLog(`ERRO: ${data.error}`);
+                } else {
+                    progressFill.style.width = '100%';
+                    addLog('Concluído!');
+                    showResults(data.markdown, data.stats);
+                }
+            } catch (err) {
+                addLog(`Erro: ${err.message}`);
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'BUSCAR';
+        }
+
+        function showResults(md, stats) {
+            rawMarkdown = md;
+            markdownOutput.innerHTML = marked.parse(md);
+            resultsStats.textContent = `${stats.fontes} fontes consultadas` +
+                (stats.erros > 0 ? ` · ${stats.erros} erros` : '');
+            resultsArea.classList.add('active');
+
+            setTimeout(() => {
+                progressArea.classList.remove('active');
+            }, 1000);
+        }
+
+        function copyMarkdown() {
+            navigator.clipboard.writeText(rawMarkdown).then(() => {
+                const btn = event.target;
+                btn.textContent = 'Copiado!';
+                setTimeout(() => btn.textContent = 'Copiar MD', 1500);
+            });
+        }
+
+        function downloadMarkdown() {
+            const blob = new Blob([rawMarkdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `osint-${input.value.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0,10)}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

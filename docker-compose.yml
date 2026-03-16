@@ -1,0 +1,32 @@
+services:
+  labfy-osint:
+    build: .
+    container_name: labfy-osint
+    restart: unless-stopped
+    ports:
+      - "8777:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SEARXNG_URL=http://searxng:8080
+    depends_on:
+      - searxng
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: labfy-searxng
+    restart: unless-stopped
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080/
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
