@@ -9,7 +9,7 @@ from .detector import (
     detect_input_type, format_cpf, format_cnpj, format_phone,
     validate_cpf, validate_cnpj,
 )
-from .google_dorking import build_dorks
+from .google_dorking import build_dorks, build_direct_links
 from .search_engine import search_dorks
 from .cnpj_lookup import lookup_cnpj, search_cnpj_by_name
 from .whois_lookup import whois_domain, extract_domain_from_email
@@ -110,6 +110,7 @@ async def run_search(query: str, progress_callback=None) -> dict:
         # --- Dorks via SearXNG ---
         dorks = build_dorks(query, input_type)
         result["google_dorks"] = dorks
+        result["direct_links"] = build_direct_links(query, input_type)
 
         dork_results = await search_dorks(dorks, progress_callback=step)
         result["google_results"] = dork_results
@@ -317,6 +318,14 @@ def generate_markdown(data: dict) -> str:
                 if r.get("snippet"):
                     lines.append(f"  > {r['snippet'][:200]}")
             lines.append("")
+
+    # Links diretos (sites protegidos por Cloudflare)
+    if data.get("direct_links"):
+        lines.append("## Consulta Direta (clique para abrir)")
+        for link in data["direct_links"]:
+            lines.append(f"- **[{link['source']}]({link['url']})**")
+            lines.append(f"  {link['description']}")
+        lines.append("")
 
     # Google Dorks não executados
     executed = {g["source"] for g in data.get("google_results", [])}
